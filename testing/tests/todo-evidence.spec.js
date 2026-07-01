@@ -13,19 +13,51 @@ for (const f of fs.readdirSync(EVIDENCE_DIR)) {
 const results = [];
 let step = 0;
 
-async function stepAction(page, label, fn) {
+async function screenshotWithTestName(page, testInfo, shotPath, stepLabel) {
+  const bannerId = '__pw-test-name-banner__';
+
+  await page.evaluate(({ id, title, label }) => {
+    const existing = document.getElementById(id);
+    if (existing) existing.remove();
+
+    const banner = document.createElement('div');
+    banner.id = id;
+    banner.textContent = label ? `Step: ${label}` : '';
+    banner.style.cssText = [
+      'width:100%',
+      'box-sizing:border-box',
+      'padding:12px 16px',
+      'background:#111827',
+      'color:#ffffff',
+      'font:600 16px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      'border-bottom:2px solid #374151',
+      'position:relative',
+      'z-index:2147483647',
+    ].join(';');
+
+    document.body.prepend(banner);
+  }, { id: bannerId, title: testInfo.title, label: stepLabel });
+
+  await page.screenshot({ path: shotPath, fullPage: true });
+
+  await page.evaluate((id) => {
+    document.getElementById(id)?.remove();
+  }, bannerId);
+}
+
+async function stepAction(page, testInfo, label, fn) {
   step += 1;
   const id = String(step).padStart(2, '0');
   const okPath = path.join(EVIDENCE_DIR, `${id}-success-${label.replace(/\s+/g, '_')}.png`);
   const failPath = path.join(EVIDENCE_DIR, `${id}-FAILED-${label.replace(/\s+/g, '_')}.png`);
   try {
     await fn();
-    await page.screenshot({ path: okPath, fullPage: true });
+    await screenshotWithTestName(page, testInfo, okPath, `${id} — ${label}`);
     results.push({ step: id, label, status: 'PASS', shot: path.basename(okPath) });
     // eslint-disable-next-line no-console
     console.log(`[PASS] ${id} — ${label}`);
   } catch (err) {
-    await page.screenshot({ path: failPath, fullPage: true });
+    await screenshotWithTestName(page, testInfo, failPath, `${id} — ${label}`);
     results.push({ step: id, label, status: 'FAIL', shot: path.basename(failPath), error: err.message });
     // eslint-disable-next-line no-console
     console.error(`[FAIL] ${id} — ${label}: ${err.message}`);
@@ -34,47 +66,47 @@ async function stepAction(page, label, fn) {
 }
 
 test.describe('Todo App — feature evidence with screenshots', () => {
-  test('verify all features step by step', async ({ page }) => {
+  test('verify all features step by step', async ({ page }, testInfo) => {
     // 1. Load page
-    await stepAction(page, 'load home page', async () => {
+    await stepAction(page, testInfo, 'load home page', async () => {
       await page.goto('/');
       await expect(page).toHaveTitle('React Starter');
     });
 
     // 2. Input visible with correct placeholder
-    await stepAction(page, 'input has accessible placeholder', async () => {
+    await stepAction(page, testInfo, 'input has accessible placeholder', async () => {
       const input = page.locator('[placeholder="Enter a task"]');
       await expect(input).toBeVisible();
       await expect(input).toHaveAttribute('placeholder', 'Enter a task');
     });
 
     // 3. Add button visible & enabled
-    await stepAction(page, 'Add button visible and enabled', async () => {
+    await stepAction(page, testInfo, 'Add button visible and enabled', async () => {
       const btn = page.locator('button:has-text("Add")');
       await expect(btn).toBeVisible();
       await expect(btn).toBeEnabled();
     });
 
     // 4. Counter starts at 0
-    await stepAction(page, 'counter shows Total tasks: 0', async () => {
+    await stepAction(page, testInfo, 'counter shows Total tasks: 0', async () => {
       await expect(page.locator('text=/Total tasks: 0/i')).toBeVisible();
     });
 
     // 5. Empty input does not create a task
-    await stepAction(page, 'empty input creates no task', async () => {
+    await stepAction(page, testInfo, 'empty input creates no task', async () => {
       await page.click('button:has-text("Add")');
       await expect(page.locator('li')).toHaveCount(0);
     });
 
     // 6. Whitespace-only input does not create a task
-    await stepAction(page, 'whitespace input creates no task', async () => {
+    await stepAction(page, testInfo, 'whitespace input creates no task', async () => {
       await page.fill('[placeholder="Enter a task"]', '     ');
       await page.click('button:has-text("Add")');
       await expect(page.locator('li')).toHaveCount(0);
     });
 
     // 7. Add a task
-    await stepAction(page, 'add task Buy groceries', async () => {
+    await stepAction(page, testInfo, 'add task Buy groceries', async () => {
       await page.fill('[placeholder="Enter a task"]', 'Buy groceries');
       await page.click('button:has-text("Add")');
       const item = page.locator('li').filter({ hasText: 'Buy groceries' });
@@ -84,12 +116,12 @@ test.describe('Todo App — feature evidence with screenshots', () => {
     });
 
     // 8. Input cleared after add
-    await stepAction(page, 'input cleared after add', async () => {
+    await stepAction(page, testInfo, 'input cleared after add', async () => {
       await expect(page.locator('[placeholder="Enter a task"]')).toHaveValue('');
     });
 
     // 9. Task structure: checkbox + delete
-    await stepAction(page, 'task has checkbox and delete button', async () => {
+    await stepAction(page, testInfo, 'task has checkbox and delete button', async () => {
       const li = page.locator('li').first();
       await expect(li.locator('input[type="checkbox"]')).toBeVisible();
       await expect(li.locator('button:has-text("Delete")')).toBeVisible();
@@ -97,7 +129,7 @@ test.describe('Todo App — feature evidence with screenshots', () => {
     });
 
     // 10. Complete a task
-    await stepAction(page, 'mark task completed', async () => {
+    await stepAction(page, testInfo, 'mark task completed', async () => {
       const cb = page.locator('input[type="checkbox"]').first();
       await cb.check();
       await expect(page.locator('li').first()).toHaveClass(/completed/);
@@ -105,7 +137,7 @@ test.describe('Todo App — feature evidence with screenshots', () => {
     });
 
     // 11. Uncheck a task
-    await stepAction(page, 'uncheck completed task', async () => {
+    await stepAction(page, testInfo, 'uncheck completed task', async () => {
       const cb = page.locator('input[type="checkbox"]').first();
       await cb.uncheck();
       await expect(page.locator('li').first()).not.toHaveClass(/completed/);
@@ -113,7 +145,7 @@ test.describe('Todo App — feature evidence with screenshots', () => {
     });
 
     // 12. Add multiple tasks
-    await stepAction(page, 'add Task B and Task C', async () => {
+    await stepAction(page, testInfo, 'add Task B and Task C', async () => {
       for (const t of ['Task B', 'Task C']) {
         await page.fill('[placeholder="Enter a task"]', t);
         await page.click('button:has-text("Add")');
@@ -123,7 +155,7 @@ test.describe('Todo App — feature evidence with screenshots', () => {
     });
 
     // 13. Duplicate names allowed
-    await stepAction(page, 'add duplicate name Task C', async () => {
+    await stepAction(page, testInfo, 'add duplicate name Task C', async () => {
       await page.fill('[placeholder="Enter a task"]', 'Task C');
       await page.click('button:has-text("Add")');
       await expect(page.locator('li')).toHaveCount(4);
@@ -131,18 +163,18 @@ test.describe('Todo App — feature evidence with screenshots', () => {
     });
 
     // 14. Delete the duplicate (middle-ish) task
-    await stepAction(page, 'delete a middle task', async () => {
+    await stepAction(page, testInfo, 'delete a middle task', async () => {
       await page.locator('li').nth(1).locator('button:has-text("Delete")').click();
       await expect(page.locator('li')).toHaveCount(3);
     });
 
     // 15. Counter reacts to delete
-    await stepAction(page, 'counter reacts to delete', async () => {
+    await stepAction(page, testInfo, 'counter reacts to delete', async () => {
       await expect(page.locator('text=/Total tasks: 3/i')).toBeVisible();
     });
 
     // 16. Special characters preserved & no script injection
-    await stepAction(page, 'special chars preserved no XSS', async () => {
+    await stepAction(page, testInfo, 'special chars preserved no XSS', async () => {
       const special = 'Task <script>alert(1)</script> & more! 🎉';
       await page.fill('[placeholder="Enter a task"]', special);
       await page.click('button:has-text("Add")');
@@ -151,7 +183,7 @@ test.describe('Todo App — feature evidence with screenshots', () => {
     });
 
     // 17. Long task name accepted
-    await stepAction(page, 'long task name accepted', async () => {
+    await stepAction(page, testInfo, 'long task name accepted', async () => {
       await page.fill('[placeholder="Enter a task"]', 'A'.repeat(200));
       await page.click('button:has-text("Add")');
       await expect(page.locator('li')).toHaveCount(5);
@@ -160,7 +192,7 @@ test.describe('Todo App — feature evidence with screenshots', () => {
     });
 
     // 18. Complete all then delete all
-    await stepAction(page, 'complete all then delete all', async () => {
+    await stepAction(page, testInfo, 'complete all then delete all', async () => {
       for (const cb of await page.locator('input[type="checkbox"]').all()) {
         await cb.check();
       }
@@ -174,7 +206,7 @@ test.describe('Todo App — feature evidence with screenshots', () => {
     });
 
     // Final summary screenshot
-    await page.screenshot({ path: path.join(EVIDENCE_DIR, 'FINAL-state.png'), fullPage: true });
+    await screenshotWithTestName(page, testInfo, path.join(EVIDENCE_DIR, 'FINAL-state.png'), 'FINAL state');
 
     // Write results manifest
     fs.writeFileSync(

@@ -1,7 +1,9 @@
 const { test, expect } = require('@playwright/test');
+const { installScreenshotTestNameHook } = require('./helpers/screenshot-testname');
 
 test.describe('To-Do App — Core User Flows', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page }, testInfo) => {
+    await installScreenshotTestNameHook(page, testInfo);
     await page.goto('/');
   });
 
