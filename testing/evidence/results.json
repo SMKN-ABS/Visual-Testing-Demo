@@ -1,0 +1,115 @@
+{
+  "total": 18,
+  "passed": 18,
+  "failed": 0,
+  "results": [
+    {
+      "step": "01",
+      "label": "load home page",
+      "status": "PASS",
+      "shot": "01-success-load_home_page.png"
+    },
+    {
+      "step": "02",
+      "label": "input has accessible placeholder",
+      "status": "PASS",
+      "shot": "02-success-input_has_accessible_placeholder.png"
+    },
+    {
+      "step": "03",
+      "label": "Add button visible and enabled",
+      "status": "PASS",
+      "shot": "03-success-Add_button_visible_and_enabled.png"
+    },
+    {
+      "step": "04",
+      "label": "counter shows Total tasks: 0",
+      "status": "PASS",
+      "shot": "04-success-counter_shows_Total_tasks:_0.png"
+    },
+    {
+      "step": "05",
+      "label": "empty input creates no task",
+      "status": "PASS",
+      "shot": "05-success-empty_input_creates_no_task.png"
+    },
+    {
+      "step": "06",
+      "label": "whitespace input creates no task",
+      "status": "PASS",
+      "shot": "06-success-whitespace_input_creates_no_task.png"
+    },
+    {
+      "step": "07",
+      "label": "add task Buy groceries",
+      "status": "PASS",
+      "shot": "07-success-add_task_Buy_groceries.png"
+    },
+    {
+      "step": "08",
+      "label": "input cleared after add",
+      "status": "PASS",
+      "shot": "08-success-input_cleared_after_add.png"
+    },
+    {
+      "step": "09",
+      "label": "task has checkbox and delete button",
+      "status": "PASS",
+      "shot": "09-success-task_has_checkbox_and_delete_button.png"
+    },
+    {
+      "step": "10",
+      "label": "mark task completed",
+      "status": "PASS",
+      "shot": "10-success-mark_task_completed.png"
+    },
+    {
+      "step": "11",
+      "label": "uncheck completed task",
+      "status": "PASS",
+      "shot": "11-success-uncheck_completed_task.png"
+    },
+    {
+      "step": "12",
+      "label": "add Task B and Task C",
+      "status": "PASS",
+      "shot": "12-success-add_Task_B_and_Task_C.png"
+    },
+    {
+      "step": "13",
+      "label": "add duplicate name Task C",
+      "status": "PASS",
+      "shot": "13-success-add_duplicate_name_Task_C.png"
+    },
+    {
+      "step": "14",
+      "label": "delete a middle task",
+      "status": "PASS",
+      "shot": "14-success-delete_a_middle_task.png"
+    },
+    {
+      "step": "15",
+      "label": "counter reacts to delete",
+      "status": "PASS",
+      "shot": "15-success-counter_reacts_to_delete.png"
+    },
+    {
+      "step": "16",
+      "label": "special chars preserved no XSS",
+      "status": "PASS",
+      "shot": "16-success-special_chars_preserved_no_XSS.png"
+    },
+    {
+      "step": "17",
+      "label": "long task name accepted",
+      "status": "PASS",
+      "shot": "17-success-long_task_name_accepted.png"
+    },
+    {
+      "step": "18",
+      "label": "complete all then delete all",
+      "status": "PASS",
+      "shot": "18-success-complete_all_then_delete_all.png"
+    }
+  ]
+}
